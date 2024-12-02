@@ -142,6 +142,10 @@ def main():
     button_rect = draw_start_screen(main_window)
 
     while run:
+        if game_started:
+            max_scroll = max(0, len(messages) - ((TEXT_BOX_HEIGHT - 40) // 20))
+            draw_text_box(main_window, current_input, scroll_position, max_scroll)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -169,24 +173,18 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if game_started:
                     if event.key == pygame.K_BACKSPACE:
-                        current_input = current_input[:-1]
+                        current_input = current_input[:-1] # backspace key -> delete last letter
                     elif event.key == pygame.K_RETURN:
                         # Submit the current message
                         if selected_player is not None:
                             messages.append(f"{game.players[selected_player].name}: {current_input}")
-                        current_input = ""
-                        visible_messages = (TEXT_BOX_HEIGHT - 40) // 20  # Calculate how many messages fit on the screen
-                        scroll_position = max(0, len(messages) - visible_messages)  # Adjust scroll to bottom
+                        current_input = ""                        
                     else:
                         current_input += event.unicode
             elif event.type == pygame.MOUSEWHEEL:
                 # Adjust scroll position with the mouse wheel
                 scroll_position += event.y  # Reverse the scroll direction
                 scroll_position = max(0, min(scroll_position, len(messages) - ((TEXT_BOX_HEIGHT - 40) // 20)))
-
-        if game_started:
-            max_scroll = max(0, len(messages) - ((TEXT_BOX_HEIGHT - 40) // 20))
-            draw_text_box(main_window, current_input, scroll_position, max_scroll)
 
     pygame.quit()
 
