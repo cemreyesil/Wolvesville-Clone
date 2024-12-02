@@ -35,6 +35,14 @@ pygame.display.set_caption('Wolvesville Player Visualization')
 profile_picture = pygame.image.load(os.path.join("visualization", "images", "default_profile.png"))
 profile_picture = pygame.transform.scale(profile_picture, (PLAYER_SIZE, PLAYER_SIZE))
 
+# Load role pictures
+werewolf_icon = pygame.image.load(os.path.join("visualization", "images", "werewolf.png"))
+werewolf_icon = pygame.transform.scale(werewolf_icon, (PLAYER_SIZE // 4, PLAYER_SIZE // 4))  # Scale to fit in the corner
+
+villager_icon = pygame.image.load(os.path.join("visualization", "images", "villager.png"))
+villager_icon = pygame.transform.scale(villager_icon, (PLAYER_SIZE // 4, PLAYER_SIZE // 4))  # Scale to fit in the corner
+
+# Draw menu
 def draw_start_screen():
     window.fill(WHITE)
     font = pygame.font.Font(None, 74)
@@ -55,6 +63,7 @@ def draw_start_screen():
 
     return button_rect
 
+# Draw players on the screen
 def draw_grid(players):
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
@@ -62,6 +71,16 @@ def draw_grid(players):
             y = OFFSET + row * PLAYER_SIZE
             window.blit(profile_picture, (x, y)) # blit(source, dest, area=None, special_flags=0) -> Rect: draws a source Surface onto dest Surface
             pygame.draw.rect(window, BLACK, (x, y, PLAYER_SIZE, PLAYER_SIZE), 1)
+
+            # Determine the player's role and draw the corresponding icon at right bottom
+            index = row * GRID_SIZE + col
+            if index < len(players):  
+                player = players[index]
+                if player.role == "Werewolf":
+                    window.blit(werewolf_icon, (x + PLAYER_SIZE - werewolf_icon.get_width(), y + PLAYER_SIZE - werewolf_icon.get_height()))
+                elif player.role == "Villager":
+                    window.blit(villager_icon, (x + PLAYER_SIZE - villager_icon.get_width(), y + PLAYER_SIZE - villager_icon.get_height()))
+
     pygame.display.update()
 
 def main():
@@ -82,7 +101,7 @@ def main():
                     game_started = True
                     game = Game()
                     game.init_players()  # Initialize roles and players
-                    draw_grid(game.players)  # Draw players on the screen
+                    draw_grid(game.players)  
         
     pygame.quit()
 

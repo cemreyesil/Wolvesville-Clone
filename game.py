@@ -14,7 +14,6 @@ class Game:
     def __init__(self):
         self.players = []
         self.day_count = 1
-        self.init_players()
 
     def init_players(self):
         roles = ["Werewolf"] * 4 + ["Villager"] * 12
@@ -22,12 +21,11 @@ class Game:
         self.players = [Player(f"Player {i+1}", role) for i, role in enumerate(roles)]
         # Print out player details for debugging purposes
         for player in self.players:
-            print(player)
+            print(player.name, player.role, player.is_alive)
 
     def get_players(self):
-        return self.players
+        return self.players.name, self.players.role, self.players.is_alive
 
 # Initial setup to test game logic
 if __name__ == "__main__":
     game = Game()
-    game.init_players()
