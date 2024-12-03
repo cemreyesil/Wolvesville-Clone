@@ -4,7 +4,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pygame
 from game import Game
-from random import randrange
 
 # Constants
 WINDOW_SIZE = 620
@@ -41,6 +40,9 @@ werewolf_icon = pygame.transform.scale(werewolf_icon, (PLAYER_SIZE // 4, PLAYER_
 
 villager_icon = pygame.image.load(os.path.join("visualization", "images", "villager.png"))
 villager_icon = pygame.transform.scale(villager_icon, (PLAYER_SIZE // 4, PLAYER_SIZE // 4))
+
+voting_hand_icon = pygame.image.load(os.path.join("visualization", "images", "Voting_Hand.png"))
+voting_hand_icon = pygame.transform.scale(voting_hand_icon, (PLAYER_SIZE // 2.8, PLAYER_SIZE // 2.8))  # Adjust the size to fit
 
 # Message Log
 messages = []
@@ -152,11 +154,16 @@ def draw_grid(window, players, selected_player=None):
                 window.blit(number_text, (number_x, number_y))
 
                 # Draw the number of votes that player got
-                if player.votes_taken != 0:
+                if player.votes_taken > 0: # Only show if the player has votes
+                    hand_x = x + PLAYER_SIZE - voting_hand_icon.get_width() - 100
+                    hand_y = y - 9  # Top-right corner
+                    window.blit(voting_hand_icon, (hand_x, hand_y))
+
+                    # Overlay the vote count on top of the hand
                     shown_vote = str(player.votes_taken)
                     print(shown_vote)
                     vote_text = playernumber_font.render(shown_vote, True, BLACK)  # Convert index to 1-based numbering
-                    vote_x = x + PLAYER_SIZE - vote_text.get_width() - 5  # Align to the top-right corner
+                    vote_x = x + PLAYER_SIZE - vote_text.get_width() - 120  # Align to the top-right corner
                     vote_y = y + 5  # Slight offset from the top edge
                     # Render white border by drawing text multiple times slightly offset
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:

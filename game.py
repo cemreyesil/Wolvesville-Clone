@@ -9,10 +9,10 @@ class Player:
         self.vote_given = False # If player is already voted or not
 
     def vote(self):
-        vote_given = True
+        self.vote_given = True
     
     def get_vote(self):
-        votes_taken =+ 1
+        self.votes_taken += 1
 
 class Game:
     def __init__(self):
