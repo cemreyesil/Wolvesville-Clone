@@ -14,6 +14,7 @@ class Game:
     def __init__(self):
         self.players = []
         self.day_count = 1
+        self.current_day = False # False == Night, True == Daytime
 
     def init_players(self):
         roles = ["Werewolf"] * 4 + ["Villager"] * 12

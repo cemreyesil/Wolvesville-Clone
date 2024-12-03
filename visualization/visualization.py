@@ -45,13 +45,13 @@ villager_icon = pygame.transform.scale(villager_icon, (PLAYER_SIZE // 4, PLAYER_
 messages = []
 
 # Draw the text box for player input
-def draw_text_box(window, current_input, scroll_position, max_scroll):
+def draw_text_box(window, current_input, scroll_position, max_scroll, game, selected_player):
     # Define text box and message log areas
     text_box_rect = pygame.Rect(0, WINDOW_SIZE, WINDOW_SIZE, TEXT_BOX_HEIGHT)
     pygame.draw.rect(window, GRAY, text_box_rect)
 
     # Draw current input text
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.SysFont("cambria", 20) # For player numbers: "arialblack", for dead "kristenitc"
     input_text = font.render(current_input, True, BLACK)
     input_rect = pygame.Rect(0, WINDOW_SIZE + TEXT_BOX_HEIGHT - 40, WINDOW_SIZE, 40)
     pygame.draw.rect(window, WHITE, input_rect)  # Background for the input area
@@ -67,10 +67,23 @@ def draw_text_box(window, current_input, scroll_position, max_scroll):
 
     # Draw message log
     y_offset = WINDOW_SIZE  # Start drawing at the top of the log area
-    for message in messages[start_index:end_index]:
-        message_text = font.render(message, True, BLACK)
+    player = game.players[selected_player] if selected_player is not None else None
+    if len(messages) == 0 and game.current_day is False and (selected_player is None or player.role == "Villager"):
+        restricted_message = "You cannot talk or see messages at night."
+        message_text = font.render(restricted_message, True, BLACK)
         window.blit(message_text, (10, y_offset))
-        y_offset += 20
+    else:
+        for message in messages[start_index:end_index]:
+            if game.current_day or (selected_player is not None and player.role == "Werewolf"):
+                # Only display messages to werewolves at night or to everyone during the day
+                message_text = font.render(message, True, BLACK)
+                window.blit(message_text, (10, y_offset))
+                y_offset += 20
+            else:
+                restricted_message = "You cannot talk or see messages at night."
+                message_text = font.render(restricted_message, True, BLACK)
+                window.blit(message_text, (10, y_offset))
+                break
 
     # Draw the scrollbar
     scrollbar_rect = pygame.Rect(WINDOW_SIZE - 20, WINDOW_SIZE, 10, log_height)
@@ -88,7 +101,7 @@ def draw_text_box(window, current_input, scroll_position, max_scroll):
 # Draw start screen
 def draw_start_screen(window):
     window.fill(WHITE)
-    font = pygame.font.Font(None, 74)
+    font = pygame.font.SysFont("timesnewroman", 74)
     text = font.render('Start', True, TEXT_COLOR)
 
     button_rect = pygame.Rect(WINDOW_SIZE // 2 - 100, WINDOW_SIZE // 2 - 50, 200, 100)
@@ -109,6 +122,8 @@ def draw_start_screen(window):
 # Draw the player grid on the main window
 def draw_grid(window, players, selected_player=None):
     window.fill(WHITE, (0, 0, WINDOW_SIZE, WINDOW_SIZE))
+    playernumber_font = pygame.font.SysFont("arialblack", 18)
+
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
             x = OFFSET + col * PLAYER_SIZE
@@ -123,6 +138,16 @@ def draw_grid(window, players, selected_player=None):
                     window.blit(werewolf_icon, (x + PLAYER_SIZE - werewolf_icon.get_width(), y + PLAYER_SIZE - werewolf_icon.get_height()))
                 elif player.role == "Villager":
                     window.blit(villager_icon, (x + PLAYER_SIZE - villager_icon.get_width(), y + PLAYER_SIZE - villager_icon.get_height()))
+
+                # Draw the player's number at the bottom-left with a white border
+                number_text = playernumber_font.render(str(index + 1), True, BLACK)  # Convert index to 1-based numbering
+                number_x = x + 5  # Slight offset for padding
+                number_y = y + PLAYER_SIZE - number_text.get_height() - 5  # Adjust position slightly above the edge
+                # Render white border by drawing text multiple times slightly offset
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
+                    border_text = playernumber_font.render(str(index + 1), True, WHITE)
+                    window.blit(border_text, (number_x + dx, number_y + dy))
+                window.blit(number_text, (number_x, number_y))
 
                 # Highlight the selected player
                 if selected_player == index:
@@ -144,7 +169,7 @@ def main():
     while run:
         if game_started:
             max_scroll = max(0, len(messages) - ((TEXT_BOX_HEIGHT - 40) // 20))
-            draw_text_box(main_window, current_input, scroll_position, max_scroll)
+            draw_text_box(main_window, current_input, scroll_position, max_scroll, game, selected_player)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -177,7 +202,9 @@ def main():
                     elif event.key == pygame.K_RETURN:
                         # Submit the current message
                         if selected_player is not None:
-                            messages.append(f"{game.players[selected_player].name}: {current_input}")
+                            player = game.players[selected_player]
+                            if game.current_day or player.role == "Werewolf":
+                                messages.append(f"{player.name}: {current_input}")
                         current_input = ""                        
                     else:
                         current_input += event.unicode
