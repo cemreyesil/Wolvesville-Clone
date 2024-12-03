@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pygame
 from game import Game
+from random import randrange
 
 # Constants
 WINDOW_SIZE = 620
@@ -11,7 +12,7 @@ CONTROL_PANEL_SIZE = 400
 GRID_SIZE = 4
 OFFSET = 10
 PLAYER_SIZE = (WINDOW_SIZE - 2 * OFFSET) // GRID_SIZE
-TEXT_BOX_HEIGHT = 200
+TEXT_BOX_HEIGHT = 150
 
 # Colors
 WHITE = (255, 255, 255)
@@ -140,14 +141,28 @@ def draw_grid(window, players, selected_player=None):
                     window.blit(villager_icon, (x + PLAYER_SIZE - villager_icon.get_width(), y + PLAYER_SIZE - villager_icon.get_height()))
 
                 # Draw the player's number at the bottom-left with a white border
-                number_text = playernumber_font.render(str(index + 1), True, BLACK)  # Convert index to 1-based numbering
+                shown_number = str(index+1)
+                number_text = playernumber_font.render(shown_number, True, BLACK)  # Convert index to 1-based numbering
                 number_x = x + 5  # Slight offset for padding
                 number_y = y + PLAYER_SIZE - number_text.get_height() - 5  # Adjust position slightly above the edge
                 # Render white border by drawing text multiple times slightly offset
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
-                    border_text = playernumber_font.render(str(index + 1), True, WHITE)
+                    border_text = playernumber_font.render(shown_number, True, WHITE)
                     window.blit(border_text, (number_x + dx, number_y + dy))
                 window.blit(number_text, (number_x, number_y))
+
+                # Draw the number of votes that player got
+                if player.votes_taken != 0:
+                    shown_vote = str(player.votes_taken)
+                    print(shown_vote)
+                    vote_text = playernumber_font.render(shown_vote, True, BLACK)  # Convert index to 1-based numbering
+                    vote_x = x + PLAYER_SIZE - vote_text.get_width() - 5  # Align to the top-right corner
+                    vote_y = y + 5  # Slight offset from the top edge
+                    # Render white border by drawing text multiple times slightly offset
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
+                        border_vote_text = playernumber_font.render(shown_vote, True, WHITE)
+                        window.blit(border_vote_text, (vote_x + dx, vote_y + dy))
+                    window.blit(vote_text, (vote_x, vote_y))
 
                 # Highlight the selected player
                 if selected_player == index:
@@ -184,17 +199,32 @@ def main():
                         game.init_players()  # Initialize roles and players
                         draw_grid(main_window, game.players)
                 elif game_started and mouse_pos[1] < WINDOW_SIZE:
-                    # Check for clicks on the player grid
-                    for row in range(GRID_SIZE):
-                        for col in range(GRID_SIZE):
-                            x = OFFSET + col * PLAYER_SIZE
-                            y = OFFSET + row * PLAYER_SIZE
-                            index = row * GRID_SIZE + col
-                            if index < len(game.players):
-                                rect = pygame.Rect(x, y, PLAYER_SIZE, PLAYER_SIZE)
-                                if rect.collidepoint(mouse_pos):
-                                    selected_player = index
-                                    draw_grid(main_window, game.players, selected_player)
+                    '''
+                      1 - left click
+                      2 - middle click
+                      3 - right click
+                      4 - scroll up
+                      5 - scroll down
+                    '''
+                    if event.button == 1 or event.button == 3:  # Left mouse button or Right mouse button
+                        # Check for clicks on the player grid
+                        for row in range(GRID_SIZE):
+                            for col in range(GRID_SIZE):
+                                x = OFFSET + col * PLAYER_SIZE
+                                y = OFFSET + row * PLAYER_SIZE
+                                index = row * GRID_SIZE + col
+                                if index < len(game.players):
+                                    rect = pygame.Rect(x, y, PLAYER_SIZE, PLAYER_SIZE)
+                                    if rect.collidepoint(mouse_pos):
+                                        if event.button == 3 and (game.current_day or (selected_player is not None and game.players[selected_player].role == "Werewolf")):
+                                            boolean = game.get_votes(selected_player, index)
+                                            if boolean: # If voting occured
+                                                draw_grid(main_window, game.players, selected_player)
+
+                                        elif event.button == 1:
+                                            selected_player = index
+                                            draw_grid(main_window, game.players, selected_player)           
+                    
             elif event.type == pygame.KEYDOWN:
                 if game_started:
                     if event.key == pygame.K_BACKSPACE:

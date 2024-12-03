@@ -5,10 +5,14 @@ class Player:
         self.name = name
         self.role = role
         self.is_alive = True
+        self.votes_taken = 0 # The # of votes that the player got
+        self.vote_given = False # If player is already voted or not
 
     def vote(self):
-        # Will be done later
-        pass
+        vote_given = True
+    
+    def get_vote(self):
+        votes_taken =+ 1
 
 class Game:
     def __init__(self):
@@ -26,6 +30,18 @@ class Game:
 
     def get_players(self):
         return self.players.name, self.players.role, self.players.is_alive
+    
+    def get_votes(self, voting_player_index, voted_player_index):
+        if self.players[voting_player_index].vote_given == False:
+            if self.players[voting_player_index].role == "Werewolf" and self.players[voted_player_index].role == "Werewolf":
+                return False # Werewolf can't vote for another werewolf
+            self.players[voting_player_index].vote()
+            self.players[voted_player_index].get_vote()
+            print(self.players[voting_player_index].vote_given, self.players[voted_player_index].votes_taken)
+            return True
+        else:
+            return False
+        
 
 # Initial setup to test game logic
 if __name__ == "__main__":
